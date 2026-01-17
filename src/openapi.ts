@@ -93,11 +93,11 @@ function toToolName(params: { operationId?: string; path: string; method: string
   const withSuffix = params.needsMethodSuffix ? `${base}_${params.method.toLowerCase()}` : base;
   const cleaned = withSuffix
     .replace(/\s+/g, '_')
-    .replace(/[^a-zA-Z0-9_\.\-]/g, '_')
+    .replace(/[^a-zA-Z0-9_\-]/g, '_')
     .replace(/_+/g, '_')
     .toLowerCase();
 
-  return cleaned.startsWith('outscraper.') ? cleaned : `outscraper.${cleaned}`;
+  return cleaned.startsWith('outscraper_') ? cleaned : `outscraper_${cleaned}`;
 }
 
 function openApiSchemaToJsonSchema(doc: OpenApiDocument, schema: any): any {

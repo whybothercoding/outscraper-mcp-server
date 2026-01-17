@@ -1,7 +1,7 @@
 # AGENTS.md — Project Context & Engineering Guidelines
 
 ## Overview
-This repository contains a **Node.js (TypeScript) Model Context Protocol (MCP) server** that exposes the **Outscraper API** as MCP tools. The server is designed to be fully data-driven, mapping OpenAPI operations directly to MCP tools.
+This repository contains a **Node.js (TypeScript) Model Context Protocol (MCP) server** that exposes the **Outscraper API** as MCP tools, resources, and prompts. The server is designed to be fully data-driven, mapping OpenAPI operations directly to MCP tools.
 
 ### Core Design Principle
 **1 OpenAPI operation = 1 MCP tool.**
@@ -19,8 +19,12 @@ The tool surface is dynamically generated from the Outscraper OpenAPI spec (`out
 ### Testing & Debugging
 The project currently favors manual verification and the `tools:list` script.
 - **Running a specific script**: Use `node --enable-source-maps dist/someFile.js`.
-- **Unit Testing**: If you add unit tests (e.g., using a file like `src/test-feature.ts`), you can run it after building via `node dist/test-feature.js`.
-- **Environment**: All commands requiring API access must have `OUTSCRAPER_API_KEY` set in the environment.
+- **Running a "Single Test"**: 
+  1. Create a temporary file like `src/test-feature.ts`.
+  2. Import the required modules (remembering `.js` extensions).
+  3. Run `npm run build`.
+  4. Execute via `node --enable-source-maps dist/test-feature.js`.
+- **Debugging Protocol**: Use `DEBUG=mcp:*` environment variable to see protocol-level logs. **IMPORTANT**: Stdio servers must not log to stdout as it corrupts the JSON-RPC stream. Use `console.error` for all logging.
 
 ## Code Style & Guidelines
 
@@ -28,12 +32,15 @@ The project currently favors manual verification and the `tools:list` script.
 - **ESM Modules**: Use `"type": "module"` in `package.json`.
 - **Import Paths**: All local imports **MUST** include the `.js` extension (e.g., `import { x } from './y.js'`). This is strictly required by the Node.js ESM loader.
 - **Target**: Node.js 18+ features (async/await, top-level await, stable `fetch` or `undici`).
+- **Formatting**: Adhere to existing 2-space indentation and single-quote convention.
 
 ### Naming Conventions
 - **Files**: `camelCase.ts` (e.g., `outscraperClient.ts`) or `kebab-case.ts`.
 - **Functions/Variables**: `camelCase`.
 - **Classes/Types/Interfaces**: `PascalCase`.
-- **MCP Tools**: `outscraper.normalized_name` (e.g., `outscraper.google_maps_search`).
+- **MCP Tools**: Namespaced as `outscraper_[normalized_name]` (e.g., `outscraper_google_maps_search`).
+- **MCP Resources**: URI format `outscraper://docs/[name]`.
+- **MCP Prompts**: `kebab-case` names (e.g., `business-search`).
 
 ### Imports & Exports
 - **Named Exports**: Strongly prefer named exports over default exports for better IDE support and tree-shaking.
@@ -50,6 +57,7 @@ The project currently favors manual verification and the `tools:list` script.
 ### Asynchronous Code
 - **Async/Await**: Use `async/await` exclusively; avoid raw Promises or callbacks.
 - **Concurrency**: Use `Promise.all` for independent parallel operations to improve performance.
+- **Timeouts**: Use the `timeoutMs` (default 120s) configured in `OutscraperClient`.
 
 ## Tool Generation Logic
 
@@ -60,20 +68,16 @@ The project currently favors manual verification and the `tools:list` script.
   - Query parameters are mapped to top-level properties.
   - JSON `requestBody` fields are merged into the same schema.
   - Arrays in query parameters are serialized as comma-separated strings (Outscraper convention).
+  - **Gemini/OpenCode Compatibility**: Tool schemas must be valid JSON Schema. Specifically, the `items` property is ONLY valid for `type: "array"`. The generator must strip `items` from non-array types (like `boolean`).
 
-### Runtime Request Construction
-When a tool is called, the `buildRequestForOperation` function:
-1. Resolves `$ref` pointers in the spec to get the full operation definition.
-2. Segregates arguments into query parameters and request body fields.
-3. Automatically appends the `X-API-KEY` header.
-4. Handles `application/json` payloads for POST/PUT/PATCH requests.
-
-### Strict Schema Validation
-- **Gemini/OpenCode Compatibility**: Tool schemas must be valid JSON Schema. Specifically, the `items` property is ONLY valid for `type: "array"`. The generator must strip `items` from non-array types (like `boolean`) to prevent LLM client crashes.
+### Data Serialization
+- **Query Params**: Booleans are converted to strings, arrays to CSV.
+- **Body Params**: If the endpoint accepts JSON, arguments not matching query parameter names are collected into a JSON object.
+- **Deref Logic**: The generator recursively resolves local `$ref` pointers within the spec to ensure nested objects are fully described to the LLM.
 
 ## Key Files & Responsibilities
 - `src/index.ts`: Entry point. Validates environment variables and starts the MCP server.
-- `src/server.ts`: Implements MCP `list_tools` and `call_tool` handlers.
+- `src/server.ts`: Implements MCP `list_tools`, `call_tool`, `list_resources`, and `list_prompts` handlers.
 - `src/openapi.ts`: Core logic for OpenAPI parsing, tool generation, and request building.
 - `src/outscraperClient.ts`: Lightweight wrapper around `undici` for HTTP communication.
 - `scripts/embed-openapi.mjs`: Build script that converts `outscraper-api-docs.json` into a TypeScript constant in `src/outscraperApiDocs.generated.ts`.
@@ -83,17 +87,50 @@ When a tool is called, the `buildRequestForOperation` function:
 - **Build-Time Embedding**: The OpenAPI spec is embedded into the source. This ensures the server is portable and doesn't rely on the JSON file's presence at runtime.
 - **Transparency**: Tool descriptions include the original HTTP method and path to help the LLM understand the underlying API contract.
 
-## Maintenance & Evolution
-- **Updating the API**: Replace `outscraper-api-docs.json` and run `npm run build`.
-- **Dependencies**: Keep dependencies minimal (`@modelcontextprotocol/sdk`, `undici`).
-- **Safety**: Never log or commit the `OUTSCRAPER_API_KEY`.
-
-## Agent-Specific Instructions
-- **Modifying Logic**: If you modify the tool generation or request building, always run `npm run tools:list` to verify that 1) all 99 operations are still mapped, 2) there are no name collisions, and 3) the schema generation is still valid.
-- **New Features**: Ensure new logic follows the established ESM and TypeScript patterns. Always verify builds with `npm run typecheck`.
-- **Debugging**: Use `DEBUG=mcp:*` environment variable if you need to see protocol-level logs, but be aware this might clutter the Stdio transport if not redirected.
+## Security & Safety
+- **Secrets**: Never log or commit the `OUTSCRAPER_API_KEY`.
+- **Environment**: All commands requiring API access must have `OUTSCRAPER_API_KEY` set.
+- **Validation**: Strict schema validation ensures LLM-provided arguments match API expectations.
 
 ## Common Tasks for Agents
-1. **Adding a specialized wrapper**: If a tool needs custom logic (e.g. data post-processing), add it to `src/openapi.ts` within the generic mapping or create a registry of "special cases".
-2. **Updating API definitions**: Replace `outscraper-api-docs.json`, run `npm run build`, and check `npm run tools:list`.
-3. **Troubleshooting Tool Calls**: Check `src/outscraperClient.ts` to see how errors are normalized. Most issues are due to missing API keys or malformed arguments.
+
+### 1. Adding a Specialized Tool Wrapper
+If an API endpoint needs custom pre-processing or post-processing (e.g., formatting complex JSON responses into readable tables), follow this pattern:
+- Locate the generic handler in `src/server.ts`.
+- Identify the operation ID.
+- Create a specific logic block for that tool name in `CallToolRequestSchema` handler.
+- Preference is still to keep the mapping generic in `openapi.ts` if the logic applies to multiple tools.
+
+### 2. Updating the OpenAPI Definition
+- Download the latest `outscraper-api-docs.json` from the provider.
+- Place it in the root directory.
+- Run `npm run build`. This triggers `scripts/embed-openapi.mjs` which regenerates `src/outscraperApiDocs.generated.ts`.
+- Run `npm run tools:list` and compare with previous counts to ensure no regressions.
+
+### 3. Troubleshooting Tool Failures
+- **401 Unauthorized**: Ensure `OUTSCRAPER_API_KEY` is correctly passed and hasn't expired.
+- **402 Payment Required**: Account balance is likely exhausted.
+- **422 Unprocessable Entity**: The schema validation passed but the API rejected the combination of arguments. Check the error message body in the LLM's response.
+- **Protocol Errors**: If the MCP client reports a parse error, check `console.error` for hidden `console.log` output that might be polluting stdout.
+
+## Troubleshooting & Debugging
+
+### Stdio Transport Issues
+The server communicates via `stdin` and `stdout`. Any noise on `stdout` will break the JSON-RPC communication.
+- Use `console.error()` for all debugging.
+- Use `DEBUG=mcp:*` to see the internal protocol flow.
+- If using an IDE, look for the MCP output panel (usually in the "Output" or "Logs" tab).
+
+### Type Errors in Generation
+The `openapi.ts` logic makes several assumptions about the structure of the OpenAPI document:
+- It supports OpenAPI 3.0+.
+- It uses basic JSON reference resolution (`$ref`).
+- If a schema is missing, it defaults to `{ "type": "string" }`.
+- If you encounter a complex nested schema that the generator misinterprets, simplify the mapping in `buildInputSchema`.
+
+### Testing New Endpoints
+Before assuming a tool works, verify it manually:
+1. Identify the tool name from `npm run tools:list`.
+2. Create a temporary script `src/manual-test.ts`.
+3. Use `OutscraperClient` directly to call the endpoint.
+4. Verify the response format matches the expected TypeScript types.

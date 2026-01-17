@@ -40,15 +40,15 @@ npm run dev
 
 ## Tool Naming Convention
 
-Tools are namespaced under `outscraper.` and use the `operationId` or a normalized path:
-- `outscraper.google_maps_search`
-- `outscraper.google_maps_reviews`
-- `outscraper.google_search`
-- `outscraper.emails_and_contacts`
+Tools are namespaced under `outscraper_` and use the `operationId` or a normalized path:
+- `outscraper_google_maps_search`
+- `outscraper_google_maps_reviews`
+- `outscraper_google_search`
+- `outscraper_emails_and_contacts`
 
 If an endpoint supports both GET and POST, they are suffixed accordingly:
-- `outscraper.google_maps_search_get`
-- `outscraper.google_maps_search_post`
+- `outscraper_google_maps_search_get`
+- `outscraper_google_maps_search_post`
 
 ## Resources
 
