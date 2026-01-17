@@ -1,0 +1,28 @@
+{
+  "name": "outscraper-mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Model Context Protocol (MCP) server for Outscraper API (auto-generated from OpenAPI spec).",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "bin": {
+    "outscraper-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "prebuild": "node scripts/embed-openapi.mjs",
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --enable-source-maps --watch dist/index.js",
+    "start": "node --enable-source-maps dist/index.js",
+    "typecheck": "node scripts/embed-openapi.mjs && tsc -p tsconfig.json --noEmit",
+    "tools:list": "node --enable-source-maps dist/toolsList.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "undici": "^6.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
