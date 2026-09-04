@@ -69,6 +69,7 @@ The project currently favors manual verification and the `tools:list` script.
   - JSON `requestBody` fields are merged into the same schema.
   - Arrays in query parameters are serialized as comma-separated strings (Outscraper convention).
   - **Gemini/OpenCode Compatibility**: Tool schemas must be valid JSON Schema. Specifically, the `items` property is ONLY valid for `type: "array"`. The generator must strip `items` from non-array types (like `boolean`).
+- **Tool Annotations**: `operationToTool()` in `openapi.ts` is the single construction point — it also stamps every tool's `ToolAnnotations` (`title` reusing the tool name, `readOnlyHint: true`, `openWorldHint: true`; every operation here is a read-only fetch against a live external API). Requires `@modelcontextprotocol/sdk` `^1.25.2`+ (verified clean through 1.30.0 for the low-level `Server`/`setRequestHandler` API this server uses — `McpServer.tool()`-only breaking changes in that range don't apply here).
 
 ### Data Serialization
 - **Query Params**: Booleans are converted to strings, arrays to CSV.

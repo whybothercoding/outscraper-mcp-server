@@ -191,7 +191,7 @@ function buildInputSchema(doc: OpenApiDocument, op: OpenApiOperation): any {
 export function operationToTool(
   doc: OpenApiDocument,
   params: { path: string; method: string; op: OpenApiOperation },
-): { name: string; description?: string; inputSchema: any } {
+): { name: string; description?: string; inputSchema: any; annotations: Record<string, unknown> } {
   const methodCount = Object.keys(doc.paths?.[params.path] ?? {}).length;
   const name = toToolName({
     operationId: params.op.operationId,
@@ -210,6 +210,14 @@ export function operationToTool(
     name,
     description: descriptionParts.join('\n'),
     inputSchema: buildInputSchema(doc, params.op),
+    // Every Outscraper operation is a read-only fetch against a live external
+    // API — no mutating endpoints exist in this spec. Single construction
+    // point: annotate here rather than per-tool.
+    annotations: {
+      title: name,
+      readOnlyHint: true,
+      openWorldHint: true,
+    },
   };
 }
 

@@ -18,7 +18,7 @@
     "tools:list": "node --enable-source-maps dist/toolsList.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "undici": "^6.21.0"
   },
   "devDependencies": {

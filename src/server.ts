@@ -22,6 +22,7 @@ type ToolRuntime = {
   op: OpenApiOperation;
   // built schema for MCP
   inputSchema: any;
+  annotations: Record<string, unknown>;
 };
 
 export async function createOutscraperMcpServer(opts: CreateServerOptions): Promise<Server> {
@@ -44,6 +45,7 @@ export async function createOutscraperMcpServer(opts: CreateServerOptions): Prom
         name: tool.name,
         description: tool.description,
         inputSchema: tool.inputSchema,
+        annotations: tool.annotations,
         op: { ...op, __path: path, __method: method.toUpperCase() } as any,
       });
     }
@@ -230,6 +232,7 @@ The Outscraper API provides powerful scraping tools for various platforms.
         name: t.name,
         description: t.description,
         inputSchema: t.inputSchema,
+        annotations: t.annotations,
       })),
     };
   });
