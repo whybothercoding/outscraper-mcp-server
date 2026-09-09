@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Model Context Protocol (MCP) server for Outscraper API (auto-generated from OpenAPI spec).",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "main": "dist/index.js",
   "bin": {
     "outscraper-mcp": "dist/index.js"

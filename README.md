@@ -1,6 +1,9 @@
 # Outscraper MCP Server (Node.js)
 
-A **Model Context Protocol (MCP)** server that exposes the complete Outscraper API as MCP tools.
+[![CI](https://github.com/whybothercoding/outscraper-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/whybothercoding/outscraper-mcp-server/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A **Model Context Protocol (MCP)** server that exposes the complete Outscraper API as MCP tools — so an AI agent (Claude, or any other MCP client) can search Google Maps, scrape LinkedIn/Amazon/Google Search, and run the other 90+ Outscraper endpoints directly as tool calls, with no hand-written wrapper per endpoint.
 
 Tools are **auto-generated** from the Outscraper OpenAPI spec, ensuring 100% coverage of available endpoints.
 
@@ -79,4 +82,5 @@ To update the tools when the Outscraper API changes:
 3. Verify with `npm run tools:list`.
 
 ## License
-UNLICENSED
+
+MIT — see [LICENSE](LICENSE)
