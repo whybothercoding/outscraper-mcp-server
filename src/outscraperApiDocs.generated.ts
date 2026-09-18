@@ -10819,15 +10819,24 @@ export const embeddedOpenApiDocument = {
         "parameters": [
           {
             "in": "query",
-            "name": "domain",
+            "name": "query",
             "required": true,
-            "description": "Domains or websites (e.g., `apple.com`, `https://www.google.com/`). \n\nIt supports batching by sending arrays with up to `250` queries (e.g., `query=text1&query=text2&query=text3`). It allows multiple queries to be sent in one request and to save on network latency time.",
+            "description": "Domains or websites (e.g., `apple.com`, `https://www.google.com/`). \n\nIt supports batching by sending arrays with up to `250` queries (e.g., `query=text1&query=text2&query=text3`). It allows multiple queries to be sent in one request and to save on network latency time.\n\nManually fixed 2026-09-18: Outscraper's own spec declared this parameter as `domain`, but every code sample and the live curl examples on this same endpoint send it as `query` — the real API rejects `domain=` with `400 At least one query is required`. Renamed to match actual behavior.",
             "schema": {
               "type": "array",
               "collectionFormat": "csv",
               "items": {
                 "type": "string"
               }
+            }
+          },
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "description": "Two-letter country code to scope traffic/rank stats to (e.g., `US`). Manually added 2026-09-18: used in Outscraper's own code samples for this endpoint but missing from their published parameter list.",
+            "schema": {
+              "type": "string"
             }
           },
           {
