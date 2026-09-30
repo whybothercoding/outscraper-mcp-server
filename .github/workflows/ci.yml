@@ -17,13 +17,13 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # "local tool" shape (systems/github-ci CONTRACT.md) — no engines.node
       # to pin against (never npm-published, not Vercel-deployed), single
       # consumer (whatever machine points a Claude/MCP config at this), so a
       # single current-LTS pin rather than a matrix.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
